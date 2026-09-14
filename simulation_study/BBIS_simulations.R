@@ -16,22 +16,23 @@ set.seed(123)
 
 ## track pars 
 speed <- 5              # speed parameter for Langevin model
-dt    <- 1/3600      # temporal resolution of simulated tracks
+dt    <- 1/60       # temporal resolution of simulated tracks (fraction of 1 hour)
 beta  <- c(4, 2, -0.1)  # covariate coefficients
 loc0  <- c(0, 0)        # starting location of tracks
 
 ## default estimation pars
-ncores <- 10     # number of cores used in parallel computations
-thin   <- 100    # thinning
-N      <- thin-1 # default nodes
-M      <- 50     # default number of bridges
-n_obs  <- 5000   # default number of observations
 n_sim  <- 100    # number of simulations per simulation study
+ncores <- parallel::detectCores() - 2 # number of cores used in parallel computations
+thin   <- 100      # thinning
+N      <- 1/(dt*15) - 1 # default nodes
+M      <- 20       # default number of bridges
+n_obs  <- 3*31*24 / dt # #hours / dt
 
 ## covariate pars
 res  <- 1  # resolution of covariates 
 ncov <- 2  # number of covariates
-ext  <- c(-1, 1, -1, 1)*250  # extent of study area
+scal = 100 #kilometers
+ext  <- c(-1, 1, -1, 1)*scal  # extent of study area
 perlin_f <- 0.05  # Perlin noise frequency
 
 # simulate covariates with Perlin noise ----------------------------------- ####
@@ -73,19 +74,22 @@ print("varying delta_t, fixed number of observations")
 sim_var <- c(5, 10, 20, 50, 100) * 36
 sim_results <- data.frame()  # refresh result target
 for (ik in 1:n_sim) {
+  
+  #simulate track
+  beta_sim <- beta
+  X <- simLMM(dt, speed, covlist, beta_sim, loc0, n_obs_sim)
+  
   for (jk in seq_along(sim_var)) {
     # set up simulation parameters
-    beta_sim <- beta
     thin_sim <- sim_var[jk]
     dt_sim <- dt
-    delta <- dt_sim*thin_sim
-    N_sim <- thin_sim-1
+    delta <- dt_sim * thin_sim * 4
+    N_sim <- 1 / delta - 1
     M_sim <- M
     n_obs_sim <- n_obs
-    Tmax <- n_obs_sim*thin_sim*dt_sim
+    Tmax <- n_obs_sim * thin_sim * dt_sim
     
-    # simulating track
-    X <- simLMM(delta, speed, covlist, beta_sim, loc0, n_obs_sim)
+    # thinning track
     
     # estimate with euler
     UD <- langevinUD(X, (0:(nrow(X) - 1)) * delta, 
