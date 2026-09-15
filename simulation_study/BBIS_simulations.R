@@ -26,7 +26,7 @@ ncores <- parallel::detectCores() - 2 # number of cores used in parallel computa
 thin   <- 100      # thinning
 N      <- 1/(dt*15) - 1 # default nodes
 M      <- 20       # default number of bridges
-n_obs  <- 3*31*24 / dt # #hours / dt
+n_obs  <- 12*31*24 / dt # #hours / dt
 
 ## covariate pars
 res  <- 1  # resolution of covariates 
@@ -81,6 +81,9 @@ for (ik in 1:n_sim) {
   dt_sim <- dt
   X_full <- simLMM(dt_sim, speed, covlist, beta_sim, loc0, n_obs_sim)
   
+  trunc = nrow(thinTrack(X_full, max(sim_var)))
+  print(trunc)
+  
   for (jk in seq_along(sim_var)) {
     # set up simulation parameters
     thin_sim <- sim_var[jk]
@@ -88,10 +91,11 @@ for (ik in 1:n_sim) {
     N_sim <- delta * (60 / 15) - 1
     
     M_sim <- M
-    Tmax <- n_obs_sim * thin_sim * dt_sim
     
     # thinning track
-    X_thin = thinTrack(X_full, thin_sim)
+    X_thin = thinTrack(X_full, thin_sim)[1:trunc,]
+    Tmax <- trunc * delta
+    print(Tmax)
     
     # estimate with euler
     UD <- langevinUD(X_thin, (0:(nrow(X_thin) - 1)) * delta, 
