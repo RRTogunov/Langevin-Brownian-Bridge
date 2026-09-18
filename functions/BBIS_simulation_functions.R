@@ -304,7 +304,6 @@ fit_langevin_bbis <- function(X, covlist, delta,
                               lower_sigma = 0.0001, 
                               cpp_path = "functions/compute_lik_grad_full.cpp", verpose = TRUE,
                               fixed_sampling = NULL) {
-  
   # define likelihood function to use
   if(isTRUE(fixed_sampling)){
     if(is.null(N)) stop("must define number of nodes 'N' if fixed_sampling = TRUE")
@@ -479,8 +478,8 @@ fit_langevin_bbis <- function(X, covlist, delta,
   
   # Prepare results
   results <- list(
-    par = o$par,
-    beta = o$par[1:n_cov],
+    par = setNames(o$par, c(names(covlist), "sigma")),
+    beta = setNames(o$par[1:n_cov], names(covlist)),
     sigma = o$par[n_cov + 1],
     convergence = o$convergence,
     value = o$value,
