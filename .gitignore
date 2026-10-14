@@ -5,3 +5,4 @@
 *.rds
 /simulation_study/outputs/reindeer_simulation
 /simulation_study/outputs/reindeer_landscape
+/archive
