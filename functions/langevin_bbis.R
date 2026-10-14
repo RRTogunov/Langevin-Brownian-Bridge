@@ -1,71 +1,9 @@
-# simulate langevin track (High-res)
-sumLTrack <- function(dt, gamma2, covlist, beta, loc0, nobs) {
-  x = mvnfast::rmvn(nobs, rep(0,2), dt * gamma2 * diag(1,2,2))
-  x[1, ] <- loc0 
-  for (i in 2:nrow(x)) {
-    grad = bilinearGradVec(matrix(x[i-1, 1:2], nrow=1), covlist)
-    x[i, ]  = x[i, ] + x[i-1, ] + (dt * gamma2 / 2)*beta %*% grad[,1,]
-  }
-  return(x)
-}
-
-# thin high-resolution track
-thinTrack <- function(x, thin) {
-  n = nrow(x)
-  x = x[seq(1, n, thin), ]
-  return(x)
-}
-
-# simulate thinned Langevin movement model
-simLMM <- function(dt, gamma2, covlist, beta, loc0, nobs){ 
-  x <- sumLTrack(dt, gamma2, covlist, beta, loc0, nobs)  # Simulate high-resolution track
-  #x <- thinTrack(x, delta) # Thin the track
-  return(x)
-}
-
-# define cpp_path in global environment
+# Compile the C++ likelihood/gradient kernel 
 library(Rcpp)
-Rcpp::sourceCpp("functions/compute_lik_grad_full.cpp")
-
-# bilinear interpolation gradient function
-bilinearGradVec <- function(loc_mat, cov_list) {
-  x_grid <- cov_list[[1]]$x
-  y_grid <- cov_list[[1]]$y
-  n_cov <- length(cov_list)
-  n_obs <- nrow(loc_mat)
-  
-  ix <- findInterval(loc_mat[,1], x_grid)
-  iy <- findInterval(loc_mat[,2], y_grid)
-  
-  valid <- ix > 0 & ix < length(x_grid) & iy > 0 & iy < length(y_grid)
-  
-  x1 <- x_grid[ix]
-  x2 <- x_grid[ix + 1]
-  y1 <- y_grid[iy]
-  y2 <- y_grid[iy + 1]
-  
-  dx <- x2 - x1
-  dy <- y2 - y1
-  lx <- loc_mat[,1]
-  ly <- loc_mat[,2]
-  
-  grad_array <- array(NA_real_, dim = c(n_cov, n_obs, 2))
-  
-  for (j in seq_len(n_cov)) {
-    f11 <- cov_list[[j]]$z[cbind(ix,     iy)]
-    f21 <- cov_list[[j]]$z[cbind(ix + 1, iy)]
-    f12 <- cov_list[[j]]$z[cbind(ix,     iy + 1)]
-    f22 <- cov_list[[j]]$z[cbind(ix + 1, iy + 1)]
-    
-    dfdx <- ((y2 - ly) * (f21 - f11) + (ly - y1) * (f22 - f12)) / (dy * dx)
-    dfdy <- ((x2 - lx) * (f12 - f11) + (lx - x1) * (f22 - f21)) / (dy * dx)
-    
-    grad_array[j, valid, 1] <- dfdx[valid]
-    grad_array[j, valid, 2] <- dfdy[valid]
-  }
-  
-  grad_array
-}
+cpp_file <- "functions/compute_lik_grad_full.cpp"
+if (!file.exists(cpp_file)) cpp_file <- here::here(cpp_file)
+Rcpp::sourceCpp(cpp_file)
+rm(cpp_file)
 
 # vectorized and paralellized likelihood and gradient function using analytical gradient and no precomputed 
 # Generalized likelihood function for fixed/regular sampling interval
@@ -303,7 +241,8 @@ fit_langevin_bbis <- function(X, covlist, delta,
                               init_beta = NULL, init_sigma = 1,
                               lower_sigma = 0.0001, 
                               cpp_path = "functions/compute_lik_grad_full.cpp", verpose = TRUE,
-                              fixed_sampling = NULL) {
+                              fixed_sampling = NULL,
+                              diagnostics = FALSE) {
   # define likelihood function to use
   if(isTRUE(fixed_sampling)){
     if(is.null(N)) stop("must define number of nodes 'N' if fixed_sampling = TRUE")
@@ -505,9 +444,83 @@ fit_langevin_bbis <- function(X, covlist, delta,
     cat(sprintf("  sigma   = %.4f\n", results$sigma))
   }
   
+  # ---- bridge-weight ESS diagnostic (importance-sampling degeneracy) ------ ####
+  # Optional; irregular-sampling path only. Recomputes the per-observed-step
+  # bridge importance weights AT THE FITTED PARAMETERS, reusing the already
+  # generated bridges (B, P) and the C++ likelihood, and returns the per-step
+  # effective sample size (ess) and its fraction of M (ess_frac). Also exports
+  # the optimised log-likelihood. Default diagnostics = FALSE leaves behaviour
+  # (and the simulation study) unchanged.
+  results$loglik <- -o$value
+  results$diagnostics <- NULL
+  if (isTRUE(diagnostics) && !fixed_sampling) {
+    gamma_hat <- sqrt(o$par[n_cov + 1])
+    ess_rows  <- vector("list", nrow(X) - 1L)
+    for (i in 1:(nrow(X) - 1L)) {
+      if (ID[i] != ID[i + 1]) next
+      N_i <- as.numeric(ceiling((times[i + 1] - times[i]) / dt_max))
+      if (N_i == 1L) {
+        ess_rows[[i]] <- data.frame(N = 1, ess = NA_real_, ess_frac = NA_real_)
+        next
+      }
+      delta_i <- as.numeric(times[i + 1] - times[i])
+      mu_x <- rep(X[i, 1], each = N_i) + 1:N_i * rep((X[i + 1, 1] - X[i, 1]), each = N_i) / (N_i + 1)
+      mu_y <- rep(X[i, 2], each = N_i) + 1:N_i * rep((X[i + 1, 2] - X[i, 2]), each = N_i) / (N_i + 1)
+      x_samples <- sweep(B[[i]][1, 1:M, 1:N_i] * gamma_hat, 2, mu_x, "+")
+      y_samples <- sweep(B[[i]][2, 1:M, 1:N_i] * gamma_hat, 2, mu_y, "+")
+      l_k <- P[i, 1:M] + log(gamma_hat) * (2 * N_i)
+      full_x <- cbind(X[i, 1], x_samples, X[i + 1, 1])
+      full_y <- cbind(X[i, 2], y_samples, X[i + 1, 2])
+      res_mat <- compute_log_lik_grad_full_cpp(full_x, full_y, l_k, X, i, o$par, delta_i, N_i, covlist)
+      logw <- res_mat[1, ]
+      a <- max(logw); w <- exp(logw - a); Wsum <- sum(w)
+      ess <- if (is.finite(Wsum) && Wsum > 0) (Wsum^2) / sum(w^2) else NA_real_
+      ess_rows[[i]] <- data.frame(N = N_i, ess = ess, ess_frac = ess / M)
+    }
+    results$diagnostics <- do.call(rbind, ess_rows)
+  }
+
   return(results)
 }
 
-
-
-
+#' Fit BBIS with retries on non-convergence
+#'
+#' Calls fit_langevin_bbis() (irregular sampling) and, if the optimiser does not
+#' converge (code != 0) or errors, refits with a fresh bridge seed, up to
+#' `max_retries` extra times. Returns the first converged fit, else the attempt
+#' with the lowest objective. 
+#'
+#' @param track      data.frame with x, y, time (POSIXct), ID
+#' @param covlist    covariate list or SpatRaster
+#' @param M          number of bridges
+#' @param dt_max     max time between nodes (in `dt_units`)
+#' @param dt_units   time units of dt_max and sigma ("hours" recommended)
+#' @param seed       base RNG seed; attempt k uses seed + k * 7919
+#' @param ncores     cores for the parallel likelihood
+#' @param init_sigma initial sigma (= gamma^2); e.g. Euler gamma2 in same units
+#' @param init_beta  initial betas (NULL = zeros)
+#' @param max_retries number of retries after the first attempt
+#' @param diagnostics passed to fit_langevin_bbis()
+#' @return list(fit, n_attempts, converged, wall_secs)
+fit_langevin_bbis_retry <- function(track, covlist, M, dt_max, dt_units = "hours",
+                                    seed, ncores, init_sigma = 1, init_beta = NULL,
+                                    max_retries = 4L, diagnostics = TRUE) {
+  best <- NULL; best_conv <- FALSE; attempt <- 0L; t0 <- Sys.time()
+  repeat {
+    set.seed(seed + attempt * 7919L)               # fresh bridges each attempt
+    res <- tryCatch(
+      fit_langevin_bbis(track, covlist, M = M, dt_max = dt_max, dt_units = dt_units,
+                        ncores = ncores, init_beta = init_beta, init_sigma = init_sigma,
+                        fixed_sampling = FALSE, diagnostics = diagnostics,
+                        verpose = FALSE),
+      error = function(e) { message("  BBIS attempt failed: ", conditionMessage(e)); e })
+    if (!inherits(res, "error")) {
+      if (is.null(best) || (is.finite(res$value) && res$value < best$value)) best <- res
+      if (isTRUE(res$convergence == 0L)) { best <- res; best_conv <- TRUE; break }
+    }
+    if (attempt >= max_retries) break
+    attempt <- attempt + 1L
+  }
+  list(fit = best, n_attempts = attempt + 1L, converged = best_conv,
+       wall_secs = as.numeric(Sys.time() - t0, units = "secs"))
+}
