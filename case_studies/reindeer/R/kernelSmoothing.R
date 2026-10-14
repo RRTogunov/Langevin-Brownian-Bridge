@@ -1,9 +1,4 @@
-# kernel smoothing functions
-library(terra)
-library(sf)
-library(dplyr)
-library(torch)
-
+# Reindeer covariate smoothing (GPU kernel smoothing) 
 # CSHS utility functions -------------------------------------------------- ####
 
 # Device / dtype helpers (centralise torch choices)
@@ -62,6 +57,11 @@ potential_GPU <- function(
     dtype = c("float", "half"),  # use "half" on CUDA to save VRAM,
     ...
 ) {
+  # torch is attached HERE (not at file top) so sourcing this file never loads it;
+  # only building a smoothed raster does. Never reached on the CPU cluster.
+  if (!requireNamespace("torch", quietly = TRUE))
+    stop("potential_GPU() needs the 'torch' package (GPU/CPU smoothing).")
+  suppressPackageStartupMessages(library(torch))
   shape <- .validate_kernel_shape(shape)
   device <- rlang::arg_match(device)
   dtype  <- rlang::arg_match(dtype)
