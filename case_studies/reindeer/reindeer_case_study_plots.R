@@ -33,7 +33,8 @@ method_title <- function(method) {
 }
 # format covariate title 
 coef_title <- function(coef) {
-  coef <- str_replace_all(coef, "_", " ") %>% str_to_sentence()
+  coef <- str_replace_all(coef, "_", " ") %>% str_to_sentence() %>%
+    str_replace("Resevoirs", "Reservoirs")  # fix typo in source column name
   ifelse(str_detect(coef, "2$"),  # quadratics
          str_replace(coef, "2$", "\u00b2"), coef)
 }
