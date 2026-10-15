@@ -250,3 +250,17 @@ diag_sm <- fits %>%
   mutate(across(where(is.numeric), ~ ifelse(is.nan(.x), NA, .x)))
 # save
 write.csv(diag_sm, out("diagnostic_summary.csv"), row.names = FALSE)
+
+# predict UD maps --------------------------------------------------------- ####
+# predicted UD averaged over folds and clock phases, per method x interval,
+# on a shared colour scale
+keys <- distinct(use(fits), method, interval, smooth_km) %>% arrange(method, interval)
+uds <- lapply(seq_len(nrow(keys)), function(i) {
+  rs <- Filter(function(r) r$method == keys$method[i] && r$interval == keys$interval[i] &&
+                 (!converged_only || isTRUE(r$converged)), recs)
+  mean_ud(lapply(rs, `[[`, "beta"), cov_fields[[as.character(keys$smooth_km[i])]])
+})
+keep <- !vapply(uds, is.null, logical(1))
+ud_stack <- rast(uds[keep])
+names(ud_stack) <- sprintf("%s | %g h", keys$method[keep], keys$interval[keep])
+writeRaster(ud_stack, out("mean_UDs.tif"), overwrite = TRUE)
