@@ -524,3 +524,26 @@ fit_langevin_bbis_retry <- function(track, covlist, M, dt_max, dt_units = "hours
   list(fit = best, n_attempts = attempt + 1L, converged = best_conv,
        wall_secs = as.numeric(Sys.time() - t0, units = "secs"))
 }
+
+#' Summarise per-step bridge effective sample size (ESS) calculated in 
+#' fit_langevin_bbis to per-fit values
+#'
+#' @param ess_df data.frame from fit_langevin_bbis(diagnostics = TRUE)$diagnostics:
+#'          columns N, ess, ess_frac (= ESS / M), one row per observed step
+#'          (N == 1 steps carry NA: no bridge). NULL allowed.
+#' @return named numeric: ess_frac_mean, ess_frac_med, ess_frac_min,
+#'         ess_frac_p05, frac_ess_lt10, N_mean, N_max, n_bridge_steps
+ess_summary <- function(ess_df) {
+  na <- c(ess_frac_mean = NA, ess_frac_med = NA, ess_frac_min = NA,
+          ess_frac_p05 = NA, frac_ess_lt10 = NA,
+          N_mean = NA, N_max = NA, n_bridge_steps = 0)
+  if (is.null(ess_df) || !nrow(ess_df)) return(na)
+  b <- ess_df[is.finite(ess_df$ess_frac) & ess_df$N > 1, , drop = FALSE]
+  if (!nrow(b)) return(na)
+  c(ess_frac_mean = mean(b$ess_frac),
+    ess_frac_med  = stats::median(b$ess_frac),
+    ess_frac_min  = min(b$ess_frac),
+    ess_frac_p05  = as.numeric(stats::quantile(b$ess_frac, 0.05)),
+    frac_ess_lt10 = mean(b$ess_frac < 0.10),          # share of near-degenerate steps
+    N_mean = mean(b$N), N_max = max(b$N), n_bridge_steps = nrow(b))
+}
