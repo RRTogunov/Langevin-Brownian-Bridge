@@ -140,6 +140,7 @@ obj = read.csv(file = here(output_path,"varying_thin_estimates.csv"))
 
 axis_labels = floor(unique(obj$Tmax) / 24.0) #c(0.5, 1.0, 2.0, 12.0, 24.0)
 
+par(mfrow = c(2,2))
 boxplot(list(numeric(0), numeric(0), numeric(0), numeric(0), numeric(0), numeric(0)), at = 1:6, names = axis_labels, ylim = c(0,5.0))
 for(i in 1:5) {
   lines(c(i,i) + 0.5, c(0, 5), lty = 2 )
@@ -237,48 +238,53 @@ for (ik in 1:n_sim) {
 
 obj = read.csv(file = here(output_path,"varying_thin_estimates_fixed_Tmax.csv"))
 
+par(mfrow = c(2,2))
 axis_labels = c(0.5, 1.0, 2.0, 6.0, 12.0, 24.0)
 
-boxplot(list(numeric(0), numeric(0), numeric(0), numeric(0), numeric(0)), at = 1:5, names = axis_labels, ylim = c(0,5.0))
-for(i in 1:4) {
+boxplot(list(numeric(0), numeric(0),numeric(0), numeric(0), numeric(0), numeric(0)), at = 1:6, names = axis_labels, ylim = c(0,5.0))
+for(i in 1:5) {
   lines(c(i,i) + 0.5, c(0, 5), lty = 2 )
 }
-boxplot(obj$beta1[obj$method == 'bbis'] ~ obj$delta[obj$method == 'bbis'], add = TRUE, col = "grey", xaxt = "n", at = 1:5 - 0.2, pars = list(boxwex = 0.35)) 
-boxplot(obj$beta1[obj$method == 'euler'] ~ obj$delta[obj$method == 'euler'], add = TRUE, col = "white", xaxt = "n", at = 1:5 + 0.2, pars = list(boxwex = 0.35)) 
-lines(c(0.5,5.5), c(beta[1], beta[1]), col = "red", lwd = 2, lty = 2)
+boxplot(obj$beta1[obj$method == 'bbis'] ~ obj$delta[obj$method == 'bbis'], add = TRUE, col = "grey", xaxt = "n", at = 1:6 - 0.2, pars = list(boxwex = 0.35)) 
+boxplot(obj$beta1[obj$method == 'euler'] ~ obj$delta[obj$method == 'euler'], add = TRUE, col = "white", xaxt = "n", at = 1:6 + 0.2, pars = list(boxwex = 0.35)) 
+lines(c(0.5,6.5), c(beta[1], beta[1]), col = "red", lwd = 2, lty = 2)
 
-boxplot(list(numeric(0), numeric(0), numeric(0), numeric(0), numeric(0)), at = 1:5, names = axis_labels, ylim = c(0,2.5))
-for(i in 1:4) {
+boxplot(list(numeric(0), numeric(0),numeric(0), numeric(0), numeric(0), numeric(0)), at = 1:6, names = axis_labels, ylim = c(0,2.5))
+for(i in 1:5) {
   lines(c(i,i) + 0.5, c(0, 2.5), lty = 2 )
 }
-boxplot(obj$beta2[obj$method == 'bbis'] ~ obj$delta[obj$method == 'bbis'], add = TRUE, col = "grey", xaxt = "n", at = 1:5 - 0.2, pars = list(boxwex = 0.35)) 
-boxplot(obj$beta2[obj$method == 'euler'] ~ obj$delta[obj$method == 'euler'], add = TRUE, col = "white", xaxt = "n", at = 1:5 + 0.2, pars = list(boxwex = 0.35)) 
-lines(c(0.5,5.5), c(beta[2], beta[2]), col = "red", lwd = 2, lty = 2)
+boxplot(obj$beta2[obj$method == 'bbis'] ~ obj$delta[obj$method == 'bbis'], add = TRUE, col = "grey", xaxt = "n", at = 1:6 - 0.2, pars = list(boxwex = 0.35)) 
+boxplot(obj$beta2[obj$method == 'euler'] ~ obj$delta[obj$method == 'euler'], add = TRUE, col = "white", xaxt = "n", at = 1:6 + 0.2, pars = list(boxwex = 0.35)) 
+lines(c(0.5,6.5), c(beta[2], beta[2]), col = "red", lwd = 2, lty = 2)
 
-boxplot(list(numeric(0), numeric(0), numeric(0), numeric(0), numeric(0)), at = 1:5, names = axis_labels, ylim = c(-0.5,0.2))
-for(i in 1:4) {
+boxplot(list(numeric(0), numeric(0), numeric(0),numeric(0), numeric(0), numeric(0)), at = 1:6, names = axis_labels, ylim = c(-0.5,0.2))
+for(i in 1:5) {
   lines(c(i,i) + 0.5, c(-0.5, 2.5), lty = 2 )
 }
-boxplot(obj$beta3[obj$method == 'bbis'] ~ obj$delta[obj$method == 'bbis'], add = TRUE, col = "grey", xaxt = "n", at = 1:5 - 0.2, pars = list(boxwex = 0.35)) 
-boxplot(obj$beta3[obj$method == 'euler'] ~ obj$delta[obj$method == 'euler'], add = TRUE, col = "white", xaxt = "n", at = 1:5 + 0.2, pars = list(boxwex = 0.35)) 
-lines(c(0.5,5.5), c(beta[3], beta[3]), col = "red", lwd = 2, lty = 2)
+boxplot(obj$beta3[obj$method == 'bbis'] ~ obj$delta[obj$method == 'bbis'], add = TRUE, col = "grey", xaxt = "n", at = 1:6 - 0.2, pars = list(boxwex = 0.35)) 
+boxplot(obj$beta3[obj$method == 'euler'] ~ obj$delta[obj$method == 'euler'], add = TRUE, col = "white", xaxt = "n", at = 1:6 + 0.2, pars = list(boxwex = 0.35)) 
+lines(c(0.5,6.5), c(beta[3], beta[3]), col = "red", lwd = 2, lty = 2)
 
-boxplot(list(numeric(0), numeric(0), numeric(0), numeric(0), numeric(0)), at = 1:5, names = axis_labels, ylim = c(0.0,5.5))
-for(i in 1:4) {
+boxplot(list(numeric(0), numeric(0), numeric(0),numeric(0), numeric(0), numeric(0)), at = 1:6, names = axis_labels, ylim = c(0.0,5.5))
+for(i in 1:5) {
   lines(c(i,i) + 0.5, c(0.0, 5.5), lty = 2 )
 }
-boxplot(obj$gammasq[obj$method == 'bbis'] ~ obj$delta[obj$method == 'bbis'], add = TRUE, col = "grey", xaxt = "n", at = 1:5 - 0.2, pars = list(boxwex = 0.35)) 
-boxplot(obj$gammasq[obj$method == 'euler'] ~ obj$delta[obj$method == 'euler'], add = TRUE, col = "white", xaxt = "n", at = 1:5 + 0.2, pars = list(boxwex = 0.35)) 
-lines(c(0.5,5.5), c(speed, speed), col = "red", lwd = 2, lty = 2)
+boxplot(obj$gammasq[obj$method == 'bbis'] ~ obj$delta[obj$method == 'bbis'], add = TRUE, col = "grey", xaxt = "n", at = 1:6 - 0.2, pars = list(boxwex = 0.35)) 
+boxplot(obj$gammasq[obj$method == 'euler'] ~ obj$delta[obj$method == 'euler'], add = TRUE, col = "white", xaxt = "n", at = 1:6 + 0.2, pars = list(boxwex = 0.35)) 
+lines(c(0.5,6.5), c(speed, speed), col = "red", lwd = 2, lty = 2)
 
 
 # Sim 3: varying number of bridges (M) ------------------------------------ ####
 print("varying M")
-sim_var <- c(25, 50, 100, 250, 500, 1000)
+sim_var <- c(25, 50, 100, 250, 500)
 #sim_results <- results_template  # refresh result target
-sim_results = data.frame() 
+sim_results = data.frame()
 
-for (ik in 1:1) {
+for (ik in 90:n_sim) {
+  print("---------------------------------------")
+  print(paste0("Iteration #", ik))
+  print("---------------------------------------")
+  
   beta_sim <- beta
   thin_sim <- c(0.5, 1.0, 2.0, 12.0, 24.0)[4]/dt
   dt_sim <- dt
@@ -329,6 +335,8 @@ for (ik in 1:1) {
   write.csv(sim_results, here(output_path, "varying_M_estimates.csv"),
             row.names = FALSE)
 }
+
+obj = read.csv(file = here(output_path, "varying_M_estimates.csv"))
 
 # Sim 4: varying number of nodes (N) -------------------------------------- ####
 print("varying N")
