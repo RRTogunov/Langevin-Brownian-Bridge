@@ -280,7 +280,7 @@ sim_var <- c(25, 50, 100, 250, 500)
 #sim_results <- results_template  # refresh result target
 sim_results = data.frame()
 
-for (ik in 90:n_sim) {
+for (ik in 1:n_sim) {
   print("---------------------------------------")
   print(paste0("Iteration #", ik))
   print("---------------------------------------")
@@ -337,6 +337,7 @@ for (ik in 90:n_sim) {
 }
 
 obj = read.csv(file = here(output_path, "varying_M_estimates.csv"))
+boxplot(obj$beta1[obj$method == 'bbis'] ~ obj$M[obj$method == 'bbis'], col = "grey", xaxt = "n") 
 
 # Sim 4: varying number of nodes (N) -------------------------------------- ####
 print("varying N")
@@ -348,11 +349,11 @@ for (ik in 1:n_sim) {
   print(paste0("Iteration #", ik))
   print("------------------------------------------------")
   beta_sim <- beta
-  M_sim = 25
-  thin_sim <- c(0.5, 1.0, 2.0, 12.0, 24.0)[4] / dt
+  M_sim = 100
+  thin_sim <- c(0.5, 1.0, 2.0, 6.0, 12.0, 24.0)[4] / dt
   dt_sim <- dt
   delta <- dt * thin_sim
-  sim_var <- delta * (60 / c(5, 15, 30, 40)) - 1
+  sim_var <- delta * (60 / c(5, 15, 30, 45, 60, 90, 120)) - 1
   n_obs_sim <- n_obs / 2
   Tmax <- n_obs_sim * dt_sim #in hours
   
@@ -373,12 +374,12 @@ for (ik in 1:n_sim) {
     setNames(col_names) %>% 
     rbind(sim_results, .)
   
+  X_thin = data.frame(x = X_thin[,1], y = X_thin[,2])
   # loop for BBIS
   for (jk in seq_along(sim_var)) {
     N_sim <- sim_var[jk]
     
     # fit model
-    X_thin = data.frame(x = X_thin[,1], y = X_thin[,2])
     out <- fit_langevin_bbis(X_thin, covlist, delta, N = N_sim, M = M_sim,
                              ncores = ncores, fixed_sampling = TRUE) 
     # extract & store bbis outputs
@@ -391,7 +392,6 @@ for (ik in 1:n_sim) {
                               matrix(out$par, nrow = 1)) |>   # estimates
       setNames(col_names) %>% 
       rbind(sim_results, .)
-    print(sim_results)
   }
   # save output
   write.csv(sim_results, here(output_path, "varying_N_estimates.csv"),
@@ -399,3 +399,7 @@ for (ik in 1:n_sim) {
 }
 
 obj = read.csv(here(output_path, "varying_N_estimates.csv"))
+
+boxplot(obj$beta1[obj$method == 'bbis'] ~ obj$N[obj$method == 'bbis'], col = "grey", xaxt = "n") 
+
+
