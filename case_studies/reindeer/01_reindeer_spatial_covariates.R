@@ -3,6 +3,7 @@
 # prep workspace ---------------------------------------------------------- ####
 source(here::here("functions/utility_functions.R"))
 sourceDir("functions")
+sourceDir(here::here("case_studies/reindeer/R"))  # potential_GPU(), smooth_covariates() (torch)
 load_lib(here, dplyr, terra, sf, oneimpact)
 
 # create raster data ------------------------------------------------------ ####
@@ -56,11 +57,11 @@ covs <- covs |>
                     bog, mountain_rock, mountain_veg, lakes,
                     resevoirs) |> 
   setNames(c("slope2", "trail_density", "road_density", "solar_radiation",
-           "bog", "mountain_rock", "mountain_veg", 
-           "lakes", "resevoirs"))
+             "bog", "mountain_rock", "mountain_veg", 
+             "lakes", "resevoirs"))
 
-# # standardise covariates
-# covs <- covs |> standardise_raster() 
+# standardise covariates
+covs <- covs |> standardise_raster()
 
 # Change the resolution and extent from m to km for numerical stability
 crs_km <- gsub("units=m", "units=km", crs(covs, proj = TRUE))
@@ -74,6 +75,23 @@ covs <- project(covs, r)              # transform raster
 # save -------------------------------------------------------------------- ####
 writeRaster(covs, "case_studies/reindeer/data/reindeer_covariates.tiff", 
             overwrite = TRUE)
+
+# save smoothed versions of covariates ------------------------------------ ####
+dist <- c(0.5, 1, 2, 3)
+
+# generate & save smoothed covs for langevin gradient
+for (d in dist) {
+  # gaussian kernel + re-standardise
+  cov_smooth <- potential_GPU(covs, shape = "gaus", alphas = dist_to_alpha(d, shape = "gaus"),
+                              device = "cpu") %>% 
+    standardise_raster() %>% 
+    setNames(names(covs))
+  
+  
+  name <- sprintf("case_studies/reindeer/data/smoothed/reindeer_covariates_smooth_%skm.tif",
+                  d)
+  writeRaster(cov_smooth, name, overwrite = TRUE)
+}
 
 # # archived version using own covariates ----------------------------------- ####
 # # 0. define paths to the raw covariates ----------------------------------- ####
