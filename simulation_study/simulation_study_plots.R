@@ -102,8 +102,58 @@ p_s2 <- ggplot(pp_s2, aes(factor(delta), estimate, colour = method, fill = metho
 ggsave(out("sim_vary_delta_fixedTmax.png"), p_s2, width = 7, height = 4); browseURL(out("sim_vary_delta_fixedTmax.png"))
 
 # Sim 3: varying number of bridges (M) ------------------------------------ ####
-# TODO: not implemented in the original base-R script; data in
-# simulation_study/varying_M_estimates.Rda if adding later
+# more bridges = more Monte-Carlo integration samples; BBIS-only (Euler/SSF
+# don't use M). x-axis is M.
+# change titles
+pp_s3 <- read.csv(file.path(sim_result_dir, "varying_M_estimates.csv")) %>%
+  to_long() %>% 
+  mutate(M = ifelse(method == "BBIS", M, "NA"))
+pp_s3$M <- factor(pp_s3$M, unique(pp_s3$M))
+# generate plot
+p_s3 <- ggplot(pp_s3, aes(factor(M), estimate, colour = method, fill = method)) +
+  geom_hline(yintercept = 0, linewidth = 0.3, colour = "black") +   # zero line
+  geom_boxplot(outlier.size = 0.3, alpha = 0.4,
+               outlier.stroke = 0.3,
+               linewidth = 0.3,
+               # fill = viridisLite::viridis(1, end = 0.9), 
+               alpha = 0.4) +
+  scale_colour_viridis_d(end = 0.9) +
+  scale_fill_viridis_d(end = 0.9) +
+  geom_hline(aes(yintercept = true), linetype = "dashed", colour = "#C43733") +   # truth
+  facet_wrap(~ par, scales = "free_y", labeller = label_parsed) +
+  labs(x = "M (number of bridges)", y = "Estimate") +
+  theme_bw()
+p_s3
+
+# save
+ggsave(out("sim_vary_M.png"), p_s3, width = 7, height = 4); browseURL(out("sim_vary_M.png"))
+
+# Sim 4: varying number of nodes per bridge (N) --------------------------- ####
+# more nodes = finer discretisation of each bridge; BBIS-only. x-axis is N.
+# change titles
+pp_s4 <- read.csv(file.path(sim_result_dir, "varying_N_estimates.csv")) %>%
+  to_long() %>% 
+  mutate(N = ifelse(method == "BBIS", N, "NA"))
+pp_s4$N <- factor(pp_s4$N, unique(pp_s4$N)[c(1, 8:2)])
+
+# generate plot
+p_s4 <- ggplot(pp_s4, aes(factor(N), estimate, colour = method, fill = method)) +
+  geom_hline(yintercept = 0, linewidth = 0.3, colour = "black") +   # zero line
+  geom_boxplot(outlier.size = 0.3, alpha = 0.4,
+               outlier.stroke = 0.3,
+               linewidth = 0.3,
+               # fill = viridisLite::viridis(1, end = 0.9),
+               alpha = 0.4) +
+  scale_colour_viridis_d(end = 0.9) +
+  scale_fill_viridis_d(end = 0.9) +
+  geom_hline(aes(yintercept = true), linetype = "dashed", colour = "#C43733") +   # truth
+  facet_wrap(~ par, scales = "free_y", labeller = label_parsed) +
+  labs(x = "N (nodes per bridge)", y = "Estimate") +
+  theme_bw()
+p_s4
+
+# save
+ggsave(out("sim_vary_N.png"), p_s4, width = 7, height = 4); browseURL(out("sim_vary_N.png"))
 
 # example simulated track figure ------------------------------------------ ####
 # simulate single track
