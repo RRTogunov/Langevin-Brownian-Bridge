@@ -121,9 +121,10 @@ p_s3 <- ggplot(pp_s3, aes(factor(M), estimate, colour = method, fill = method)) 
   scale_fill_viridis_d(end = 0.9) +
   geom_hline(aes(yintercept = true), linetype = "dashed", colour = "#C43733") +   # truth
   facet_wrap(~ par, scales = "free_y", labeller = label_parsed) +
-  labs(x = "M (number of bridges)", y = "Estimate") +
+  labs(x = "M (number of bridges)", y = "Estimate",
+       colour = "Method", fill = "Method") +
   theme_bw()
-p_s3
+# p_s3
 
 # save
 ggsave(out("sim_vary_M.png"), p_s3, width = 7, height = 4); browseURL(out("sim_vary_M.png"))
@@ -148,9 +149,10 @@ p_s4 <- ggplot(pp_s4, aes(factor(N), estimate, colour = method, fill = method)) 
   scale_fill_viridis_d(end = 0.9) +
   geom_hline(aes(yintercept = true), linetype = "dashed", colour = "#C43733") +   # truth
   facet_wrap(~ par, scales = "free_y", labeller = label_parsed) +
-  labs(x = "N (nodes per bridge)", y = "Estimate") +
+  labs(x = "N (nodes per bridge)", y = "Estimate",
+       colour = "Method", fill = "Method") +
   theme_bw()
-p_s4
+# p_s4
 
 # save
 ggsave(out("sim_vary_N.png"), p_s4, width = 7, height = 4); browseURL(out("sim_vary_N.png"))
