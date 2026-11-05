@@ -20,7 +20,7 @@ out <- function(suffix) file.path(results_dir, paste0("reindeer_simulation_", su
 # format method title
 method_title <- function(method) {
   case_when(method == "bbis"  ~ "DGE",
-            method == "euler" ~ "Euler",
+            method == "euler" ~ "EM",
             method == "ssf"   ~ "SSF")
 }
 # format covariate title

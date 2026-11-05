@@ -18,7 +18,7 @@ out <- function(suffix) file.path(results_dir, paste0("sim_study_", suffix))
 # format method title
 method_title <- function(method) {
   case_when(method == "bbis"  ~ "DGE",
-            method == "euler" ~ "Euler",
+            method == "euler" ~ "EM",
             method == "ssf"   ~ "SSF")
 }
 # plotmath labels per parameter (parsed by label_parsed)
