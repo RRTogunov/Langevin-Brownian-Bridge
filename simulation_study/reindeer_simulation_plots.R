@@ -19,7 +19,7 @@ rd_exp      <- "thinning_fixed_hour"                   # matching reindeer exper
 out <- function(suffix) file.path(results_dir, paste0("reindeer_simulation_", suffix))
 # format method title
 method_title <- function(method) {
-  case_when(method == "bbis"  ~ "BBIS",
+  case_when(method == "bbis"  ~ "DGE",
             method == "euler" ~ "Euler",
             method == "ssf"   ~ "SSF")
 }
@@ -131,7 +131,7 @@ p_est <- ggplot(pp_est, aes(factor(delta, x_lvls, x_labs), estimate,
 # p_est
 
 # save
-ggsave(out("beta_est.png"), p_est, width = 7, height = 5); browseURL(out("beta_est.png"))
+ggsave(out("beta_est.png"), p_est, width = 7, height = 5); #browseURL(out("beta_est.png"))
 # 
 # # plot: simulated tracks over a covariate --------------------------------- ####
 # ids     <- c(1:4)             # simulated animals to plot (1..n_animals)

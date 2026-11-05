@@ -17,7 +17,7 @@ sim_result_dir <- here("simulation_study/outputs")
 out <- function(suffix) file.path(results_dir, paste0("sim_study_", suffix))
 # format method title
 method_title <- function(method) {
-  case_when(method == "bbis"  ~ "BBIS",
+  case_when(method == "bbis"  ~ "DGE",
             method == "euler" ~ "Euler",
             method == "ssf"   ~ "SSF")
 }
@@ -65,8 +65,8 @@ p_s1 <- ggplot(pp_s1, aes(factor(x), estimate, colour = method, fill = method)) 
                linewidth = 0.3,
                position = position_dodge(width = 0.8)) +
   geom_hline(aes(yintercept = true), linetype = "dashed", colour = "#C43733") +   # truth
-  scale_colour_viridis_d(end = 0.9) +
-  scale_fill_viridis_d(end = 0.9) +
+  scale_colour_viridis_d(end = 0.45) +
+  scale_fill_viridis_d(end = 0.45) +
   facet_wrap(~ par, scales = "free_y", labeller = label_parsed) +
   labs(x = expression(T[max] ~ "(days)"), y = "Estimate",
        colour = "Method", fill = "Method") +
@@ -74,7 +74,7 @@ p_s1 <- ggplot(pp_s1, aes(factor(x), estimate, colour = method, fill = method)) 
 # p_s1
 
 # save
-ggsave(out("sim_vary_Tmax.png"), p_s1, width = 7, height = 4); browseURL(out("sim_vary_Tmax.png"))
+ggsave(out("sim_vary_Tmax.png"), p_s1, width = 7, height = 4); #browseURL(out("sim_vary_Tmax.png"))
 
 # Sim 2: varying delta_t, fixed maximum time ------------------------------ ####
 # Tmax fixed, so coarser delta means fewer fixes; x-axis is delta in hours
@@ -90,8 +90,8 @@ p_s2 <- ggplot(pp_s2, aes(factor(delta), estimate, colour = method, fill = metho
                linewidth = 0.3,
                position = position_dodge(width = 0.8)) +
   geom_hline(aes(yintercept = true), linetype = "dashed", colour = "#C43733") +   # truth
-  scale_colour_viridis_d(end = 0.9) +
-  scale_fill_viridis_d(end = 0.9) +
+  scale_colour_viridis_d(end = 0.45) +
+  scale_fill_viridis_d(end = 0.45) +
   facet_wrap(~ par, scales = "free_y", labeller = label_parsed) +
   labs(x = expression(Delta[t] ~ "(hours)"), y = "Estimate",
        colour = "Method", fill = "Method") +
@@ -99,7 +99,7 @@ p_s2 <- ggplot(pp_s2, aes(factor(delta), estimate, colour = method, fill = metho
 # p_s2
 
 # save
-ggsave(out("sim_vary_delta_fixedTmax.png"), p_s2, width = 7, height = 4); browseURL(out("sim_vary_delta_fixedTmax.png"))
+ggsave(out("sim_vary_delta_fixedTmax.png"), p_s2, width = 7, height = 4); #browseURL(out("sim_vary_delta_fixedTmax.png"))
 
 # Sim 3: varying number of bridges (M) ------------------------------------ ####
 # more bridges = more Monte-Carlo integration samples; BBIS-only (Euler/SSF
@@ -107,7 +107,7 @@ ggsave(out("sim_vary_delta_fixedTmax.png"), p_s2, width = 7, height = 4); browse
 # change titles
 pp_s3 <- read.csv(file.path(sim_result_dir, "varying_M_estimates.csv")) %>%
   to_long() %>% 
-  mutate(M = ifelse(method == "BBIS", M, "NA"))
+  mutate(M = ifelse(method == "DGE", M, "NA"))
 pp_s3$M <- factor(pp_s3$M, unique(pp_s3$M))
 # generate plot
 p_s3 <- ggplot(pp_s3, aes(factor(M), estimate, colour = method, fill = method)) +
@@ -115,10 +115,10 @@ p_s3 <- ggplot(pp_s3, aes(factor(M), estimate, colour = method, fill = method)) 
   geom_boxplot(outlier.size = 0.3, alpha = 0.4,
                outlier.stroke = 0.3,
                linewidth = 0.3,
-               # fill = viridisLite::viridis(1, end = 0.9), 
+               # fill = viridisLite::viridis(1, end = 0.45), 
                alpha = 0.4) +
-  scale_colour_viridis_d(end = 0.9) +
-  scale_fill_viridis_d(end = 0.9) +
+  scale_colour_viridis_d(end = 0.45) +
+  scale_fill_viridis_d(end = 0.45) +
   geom_hline(aes(yintercept = true), linetype = "dashed", colour = "#C43733") +   # truth
   facet_wrap(~ par, scales = "free_y", labeller = label_parsed) +
   labs(x = "M (number of bridges)", y = "Estimate",
@@ -127,14 +127,14 @@ p_s3 <- ggplot(pp_s3, aes(factor(M), estimate, colour = method, fill = method)) 
 # p_s3
 
 # save
-ggsave(out("sim_vary_M.png"), p_s3, width = 7, height = 4); browseURL(out("sim_vary_M.png"))
+ggsave(out("sim_vary_M.png"), p_s3, width = 7, height = 4); #browseURL(out("sim_vary_M.png"))
 
 # Sim 4: varying number of nodes per bridge (N) --------------------------- ####
 # more nodes = finer discretisation of each bridge; BBIS-only. x-axis is N.
 # change titles
 pp_s4 <- read.csv(file.path(sim_result_dir, "varying_N_estimates.csv")) %>%
   to_long() %>% 
-  mutate(N = ifelse(method == "BBIS", N, "NA"))
+  mutate(N = ifelse(method == "DGE", N, "NA"))
 pp_s4$N <- factor(pp_s4$N, unique(pp_s4$N)[c(1, 8:2)])
 
 # generate plot
@@ -143,10 +143,10 @@ p_s4 <- ggplot(pp_s4, aes(factor(N), estimate, colour = method, fill = method)) 
   geom_boxplot(outlier.size = 0.3, alpha = 0.4,
                outlier.stroke = 0.3,
                linewidth = 0.3,
-               # fill = viridisLite::viridis(1, end = 0.9),
+               # fill = viridisLite::viridis(1, end = 0.45),
                alpha = 0.4) +
-  scale_colour_viridis_d(end = 0.9) +
-  scale_fill_viridis_d(end = 0.9) +
+  scale_colour_viridis_d(end = 0.45) +
+  scale_fill_viridis_d(end = 0.45) +
   geom_hline(aes(yintercept = true), linetype = "dashed", colour = "#C43733") +   # truth
   facet_wrap(~ par, scales = "free_y", labeller = label_parsed) +
   labs(x = "N (nodes per bridge)", y = "Estimate",
@@ -155,7 +155,112 @@ p_s4 <- ggplot(pp_s4, aes(factor(N), estimate, colour = method, fill = method)) 
 # p_s4
 
 # save
-ggsave(out("sim_vary_N.png"), p_s4, width = 7, height = 4); browseURL(out("sim_vary_N.png"))
+ggsave(out("sim_vary_N.png"), p_s4, width = 7, height = 4); #browseURL(out("sim_vary_N.png"))
+
+# compute time plot ------------------------------------------------------- ####
+# summarise compute & iteration times
+pp_s1_sum <- group_by(pp_s1, Tmax) %>% 
+  filter(method == "DGE") %>% 
+  summarise(mean_dt = round(mean(dt.1)),
+            mean_it = round(mean(iterations)),
+            med_it = median(iterations))
+pp_s2_sum <- group_by(pp_s2, delta) %>% 
+  filter(method == "DGE") %>% 
+  summarise(mean_dt = round(mean(dt.1)),
+            mean_it = round(mean(iterations)),
+            med_it = median(iterations))
+pp_s3_sum <- group_by(pp_s3, M) %>% 
+  filter(method == "DGE") %>% 
+  summarise(mean_dt = round(mean(dt.1)),
+            mean_it = round(mean(iterations)),
+            med_it = median(iterations))
+pp_s4_sum <- group_by(pp_s4, N) %>% 
+  filter(method == "DGE") %>% 
+  summarise(mean_dt = round(mean(dt.1)),
+            mean_it = round(mean(iterations)),
+            med_it = median(iterations))
+# compute time plots
+{
+  pp_comp1 <- ggplot(filter(pp_s1, method == "DGE"), 
+         aes(x = factor(Tmax/365), y = dt.1)) + 
+    geom_boxplot(outlier.size = 0.3, outlier.stroke = 0.3,
+                 linewidth = 0.3, fill = "gray") + 
+    # geom_text(data = pp_s1_sum,
+    #           aes(y = Inf, label = sprintf("%s s", mean_dt)),
+    #           vjust = 1) + 
+    labs(x = expression(T[max] ~ "(years)"), y = "Time (seconds)")
+  pp_comp2 <- ggplot(filter(pp_s2, method == "DGE"), 
+         aes(x = factor(delta), y = dt.1)) + 
+    geom_boxplot(outlier.size = 0.3, outlier.stroke = 0.3,
+                 linewidth = 0.3, fill = "gray") + 
+    # geom_text(data = pp_s2_sum,
+    #           aes(y = Inf, label = sprintf("%s s", mean_dt)),
+    #           vjust = 1) + 
+    labs(x = expression(Delta[t] ~ "(hours)"), y = "Time (seconds)")
+  pp_comp3 <- ggplot(filter(pp_s3, method == "DGE"), 
+         aes(x = factor(M), y = dt.1)) + 
+    geom_boxplot(outlier.size = 0.3, outlier.stroke = 0.3,
+                 linewidth = 0.3, fill = "gray") + 
+    # geom_text(data = pp_s3_sum,
+    #           aes(y = Inf, label = sprintf("%s s", mean_dt)),
+    #           vjust = 1) + 
+    labs(x = "M (number of bridges)", y = "Time (seconds)") 
+  pp_comp4 <- ggplot(filter(pp_s4, method == "DGE"), 
+         aes(x = factor(N), y = dt.1)) + 
+    geom_boxplot(outlier.size = 0.3, outlier.stroke = 0.3,
+                 linewidth = 0.3, fill = "gray") + 
+    # geom_text(data = pp_s4_sum,
+    #           aes(y = Inf, label = sprintf("%s s", mean_dt)),
+    #           vjust = 1) + 
+    labs(x = "N (number of nodes)", y = "Time (seconds)") 
+  }
+# compute iteration plots
+{
+  pp_itr1 <- ggplot(filter(pp_s1, method == "DGE"), 
+                     aes(x = factor(Tmax/365), y = iterations)) + 
+    geom_boxplot(outlier.size = 0.3, outlier.stroke = 0.3,
+                 linewidth = 0.3, fill = "gray") + 
+    # geom_text(data = pp_s1_sum,
+    #           aes(y = Inf, label = mean_it),
+    #           vjust = 1) + 
+    labs(x = expression(T[max] ~ "(years)"), y = "Iterations") 
+  pp_itr2 <- ggplot(filter(pp_s2, method == "DGE"), 
+                     aes(x = factor(delta), y = iterations)) + 
+    geom_boxplot(outlier.size = 0.3, outlier.stroke = 0.3,
+                 linewidth = 0.3, fill = "gray") + 
+    # geom_text(data = pp_s2_sum,
+    #           aes(y = Inf, label = mean_it),
+    #           vjust = 1) + 
+    labs(x = expression(Delta[t] ~ "(hours)"), y = "Iterations")
+  pp_itr3 <- ggplot(filter(pp_s3, method == "DGE"), 
+                     aes(x = factor(M), y = iterations)) + 
+    geom_boxplot(outlier.size = 0.3, outlier.stroke = 0.3,
+                 linewidth = 0.3, fill = "gray") + 
+    # geom_text(data = pp_s3_sum,
+    #           aes(y = Inf, label = mean_it),
+    #           vjust = 1) + 
+    labs(x = "M (number of bridges)", y = "Iterations")
+  pp_itr4 <- ggplot(filter(pp_s4, method == "DGE"), 
+                     aes(x = factor(N), y = iterations)) + 
+    geom_boxplot(outlier.size = 0.3, outlier.stroke = 0.3,
+                 linewidth = 0.3, fill = "gray") + 
+    # geom_text(data = pp_s4_sum,
+    #           aes(y = Inf, label = mean_it),
+    #           vjust = 1) + 
+    labs(x = "N (number of nodes)", y = "Iterations") 
+}
+
+# combine
+compute_plot <- (((pp_comp1 + labs(x = NULL) | pp_comp2 + labs(y = NULL, x = NULL) | pp_comp3 + labs(y = NULL, x = NULL) | pp_comp4 + labs(y = NULL, x = NULL) ) /
+(pp_itr1 | pp_itr2 + labs(y = NULL) | pp_itr3 + labs(y = NULL) | pp_itr4 + labs(y = NULL))) &
+  scale_y_log10(labels = label_number()) &
+  theme_bw())  + 
+  patchwork::plot_layout(axes = "collect") + 
+patchwork::plot_annotation(tag_levels = "a", tag_suffix = ")")
+
+# save
+ggsave(out("sim_compute.png"), compute_plot, 
+       width = 10, height = 5); #browseURL(out("sim_compute.png"))
 
 # example simulated track figure ------------------------------------------ ####
 # simulate single track
@@ -217,8 +322,8 @@ if (file.exists(example_track_path)) {
 
 # stationary UD on the grid: pi(s) proportional to exp(sum_k beta_k cov_k(s))
 ud_z  <- exp(beta[1] * covlist[[1]]$z +
-             beta[2] * covlist[[2]]$z +
-             beta[3] * covlist[[3]]$z)
+               beta[2] * covlist[[2]]$z +
+               beta[3] * covlist[[3]]$z)
 ud_df <- data.frame(grid, ud = as.vector(log(ud_z / sum(ud_z))))
 
 # thin the track to the experiment's resolutions 
@@ -289,8 +394,8 @@ cov_panel <- function(i) {
                                c(1,1,1,0)[i], 0),
           plot.subtitle = element_text(hjust = 0.5),
           legend.position = "none")
-          # legend.key.width  = unit(0.3, "lines"),
-          # legend.key.height = unit(0.5, "lines"))
+  # legend.key.width  = unit(0.3, "lines"),
+  # legend.key.height = unit(0.5, "lines"))
 }
 
 # Panel 1: raw covs 

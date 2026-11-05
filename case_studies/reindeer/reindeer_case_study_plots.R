@@ -27,7 +27,7 @@ make_path(score_dir)
 out <- function(suffix) file.path(results_dir, paste0(exp_name, "_", suffix))
 # format method title 
 method_title <- function(method) {
-  case_when(method == "bbis"  ~ "BBIS",
+  case_when(method == "bbis"  ~ "DGE",
             method == "euler" ~ "Euler",
             method == "ssf"   ~ "SSF")
 }
