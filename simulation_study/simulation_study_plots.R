@@ -158,27 +158,30 @@ p_s4 <- ggplot(pp_s4, aes(factor(N), estimate, colour = method, fill = method)) 
 ggsave(out("sim_vary_N.png"), p_s4, width = 7, height = 4); #browseURL(out("sim_vary_N.png"))
 
 # compute time plot ------------------------------------------------------- ####
-# summarise compute & iteration times
-pp_s1_sum <- group_by(pp_s1, Tmax) %>% 
-  filter(method == "DGE") %>% 
-  summarise(mean_dt = round(mean(dt.1)),
-            mean_it = round(mean(iterations)),
-            med_it = median(iterations))
-pp_s2_sum <- group_by(pp_s2, delta) %>% 
-  filter(method == "DGE") %>% 
-  summarise(mean_dt = round(mean(dt.1)),
-            mean_it = round(mean(iterations)),
-            med_it = median(iterations))
-pp_s3_sum <- group_by(pp_s3, M) %>% 
-  filter(method == "DGE") %>% 
-  summarise(mean_dt = round(mean(dt.1)),
-            mean_it = round(mean(iterations)),
-            med_it = median(iterations))
-pp_s4_sum <- group_by(pp_s4, N) %>% 
-  filter(method == "DGE") %>% 
-  summarise(mean_dt = round(mean(dt.1)),
-            mean_it = round(mean(iterations)),
-            med_it = median(iterations))
+# summarise compute & iteration times 
+{
+  pp_s1_sum <- group_by(pp_s1, Tmax) %>% 
+    filter(method == "DGE") %>% 
+    summarise(mean_dt = round(mean(dt.1)),
+              mean_it = round(mean(iterations)),
+              med_it = median(iterations))
+  pp_s2_sum <- group_by(pp_s2, delta) %>% 
+    filter(method == "DGE") %>% 
+    summarise(mean_dt = round(mean(dt.1)),
+              mean_it = round(mean(iterations)),
+              med_it = median(iterations))
+  pp_s3_sum <- group_by(pp_s3, M) %>% 
+    filter(method == "DGE") %>% 
+    summarise(mean_dt = round(mean(dt.1)),
+              mean_it = round(mean(iterations)),
+              med_it = median(iterations))
+  pp_s4_sum <- group_by(pp_s4, N) %>% 
+    filter(method == "DGE") %>% 
+    summarise(mean_dt = round(mean(dt.1)),
+              mean_it = round(mean(iterations)),
+              med_it = median(iterations))
+}
+
 # compute time plots
 {
   pp_comp1 <- ggplot(filter(pp_s1, method == "DGE"), 
@@ -214,6 +217,7 @@ pp_s4_sum <- group_by(pp_s4, N) %>%
     #           vjust = 1) + 
     labs(x = "N (number of nodes)", y = "Time (seconds)") 
   }
+
 # compute iteration plots
 {
   pp_itr1 <- ggplot(filter(pp_s1, method == "DGE"), 
@@ -260,7 +264,7 @@ patchwork::plot_annotation(tag_levels = "a", tag_suffix = ")")
 
 # save
 ggsave(out("sim_compute.png"), compute_plot, 
-       width = 10, height = 5); #browseURL(out("sim_compute.png"))
+       width = 10, height = 5); browseURL(out("sim_compute.png"))
 
 # example simulated track figure ------------------------------------------ ####
 # simulate single track

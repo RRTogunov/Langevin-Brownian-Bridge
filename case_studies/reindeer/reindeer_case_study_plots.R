@@ -171,16 +171,15 @@ r3h <- lapply(methods, function(m) ud_stack[[paste(m, "| 3 h")]])
 dUD <- lapply(methods, function(m) {
   ud_stack[[paste(m, "| 24 h")]] - ud_stack[[paste(m, "| 3 h")]]
 })
+frUD <- lapply(methods, function(m) {
+  ud_stack[[paste(m, "| 24 h")]] / ud_stack[[paste(m, "| 3 h")]]
+})
 
 # Raster -> long data frame (x/y are needed by geom_raster; axes are hidden)
-to_df <- function(r) {
-  df <- as.data.frame(r, xy = TRUE)
-  names(df)[3] <- "value"
-  df
-}
+rast_to_df <- function(r) {setNames(as.data.frame(r, xy = TRUE), c("x", "y", "value"))}
 
-df_row1 <- lapply(r3h, to_df)
-df_row2 <- lapply(dUD, to_df)
+df_row1 <- lapply(r3h, rast_to_df)
+df_row2 <- lapply(frUD, rast_to_df)
 
 # Shared scale bars
 fill_ud <- scale_fill_gradientn(
@@ -192,18 +191,14 @@ fill_ud <- scale_fill_gradientn(
   na.value = "transparent",
   guide    = guide_colourbar(barheight = unit(2, "in"), barwidth = unit(0.25, "in"))
 )
+# divergent
+fill_diff <- scale_fill_ratio(range(bind_rows(df_row2)$value),
+                 transform = "log",
+                 name     = NULL, 
+                 breaks = c(0.01, 0.1, 1, 10, 100, 1000),
+                 labels = c(0.01, 0.1, 1, 10, 100, 1000))
 
-fill_diff <- scale_fill_gradientn(
-  colours  = hcl.colors(101, "Blue-Red 3"),
-  limits   = c(-3.5e-6, 3.5e-6),
-  breaks   = seq(-3e-6, 3e-6, by = 1.5e-6),
-  labels   = label_scientific(digits = 1),
-  name     = NULL,
-  na.value = "transparent",
-  guide    = guide_colourbar(barheight = unit(2, "in"), barwidth = unit(0.25, "in"))
-)
 
-# One panel: raster only, no axes, optional title
 panel <- function(df, sc, title = NULL) {
   ggplot(df, aes(x, y, fill = value)) +
     geom_raster() +
@@ -219,19 +214,21 @@ p_row1 <- Map(function(df, m) panel(df, fill_ud, method_title(m)), df_row1, meth
 p_row2 <- lapply(df_row2, function(df) panel(df, fill_diff))
 
 # Each row collects its shared legend onto the right
-row1 <- wrap_plots(p_row1, nrow = 1, guides = "collect") & theme(legend.position = "right")
-row2 <- wrap_plots(p_row2, nrow = 1, guides = "collect") & theme(legend.position = "right")
+row1 <- wrap_plots(p_row1, nrow = 1, guides = "collect") & theme(legend.position = "right", legend.justification = 0)
+row2 <- wrap_plots(p_row2, nrow = 1, guides = "collect") & theme(legend.position = "right", legend.justification = 0)
 
 # Rotated row titles on the left
 row_lab <- function(lbl) {
   wrap_elements(full = textGrob(lbl, rot = 90, gp = gpar(fontsize = 10)))
 }
 
-top <- (row_lab(expression("3 h UD")) | row1) + plot_layout(widths = c(0.01, 1))
-bot <- (row_lab(expression(Delta * "(UD): 24 h - 3 h")) | row2) + plot_layout(widths = c(0.01, 1))
+top <- (row_lab(expression(pi^("3 h")))  | row1) + plot_layout(widths = c(0.02, 1))
+# bot <- (row_lab(expression(Delta * (pi)[": 24 h - 3 h"])) | row2) + plot_layout(widths = c(0.01, 1))
+# bot <- (row_lab(expression(pi["24 h"]/pi ["3 h"])) | row2) + plot_layout(widths = c(0.01, 1))
+bot <- (row_lab(expression(pi^("24 h")/pi^("3 h"))) | row2) + plot_layout(widths = c(0.02, 1))
 fig <- top / bot
 
-ggsave(out("dUD_panels_gg.png"), plot = fig,
-       width = 6, height = 4.5, dpi = 150, bg = "white") #; browseURL(out("dUD_panels_gg.png"))
+ggsave(out("dUD_panels_gg.pdf"), plot = fig, device = cairo_pdf,
+       width = 6, height = 4.8, dpi = 150, bg = "white"); browseURL(out("dUD_panels_gg.pdf"))
 
 
